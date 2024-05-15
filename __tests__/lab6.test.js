@@ -2,7 +2,7 @@ describe('Basic user flow for Website', () => {
   // First, visit the lab 8 website
   beforeAll(async () => {
     await page.goto('https://elaine-ch.github.io/Lab6_Part1_Starter/');
-  });
+  }, 10000);
 
   // Next, check to make sure that all 20 <product-item> elements have loaded
   it('Initial Home Page - Check for 20 product items', async () => {
@@ -39,7 +39,14 @@ describe('Basic user flow for Website', () => {
     // TODO - Step 1
     // Right now this function is only checking the first <product-item> it found, make it so that
     // it checks every <product-item> it found
+    for(let i = 0; i < prodItemsData.length; i++){
+        currValue = prodItemsData[i];
+        if (currValue.title.length == 0) { allArePopulated = false; }
+        if (currValue.price.length == 0) { allArePopulated = false; }
+        if (currValue.image.length == 0) { allArePopulated = false; }
 
+        expect(allArePopulated).toBe(true);
+    }
   }, 10000);
 
   it('Make sure <product-item> elements are populated', async () => {
@@ -63,6 +70,31 @@ describe('Basic user flow for Website', () => {
     // Grab the shadowRoot of that element (it's a property), then query a button from that shadowRoot.
     // Once you have the button, you can click it and check the innerText property of the button.
     // Once you have the innerText property, use innerText.jsonValue() to get the text value of it
+
+    // const theItem = await page.$('product-item', prodItems => {
+    //   const shadRoot = prodItems.shadowRoot;
+    //   const queryButton = shadRoot.$('button');
+    //   const clickButton = page.click(queryButton);
+    //   const buttonText = clickButton.innerText;
+    //   return buttonText
+    //   // return clickButton
+    // });
+    // const getValue = await page.evaluateHandle(e => e.innerText, theItem);
+
+    const theItem = await page.$('product-item');
+    // console.log('This is theItem: ' + theItem);
+    const shadRoot = await page.evaluateHandle(e => e.shadowRoot, theItem);
+    // console.log('This is shadRoot: ' + shadRoot);
+    const queryButton = await shadRoot.$('button');
+    // console.log('This is queryButton: ' + queryButton)
+    await queryButton.click();
+    const buttonText = await page.evaluateHandle(e => e.innerText, queryButton);
+    // console.log('This is buttonText: ' + buttonText);
+    const jsonText = await buttonText.jsonValue();    // note to self: put "await" otherwise this is returned as a "Promise"
+    // console.log(jsonText);
+
+    expect(jsonText).toBe('Remove from Cart');
+    
   }, 2500);
 
   // Check to make sure that after clicking "Add to Cart" on every <product-item> that the Cart
@@ -73,6 +105,8 @@ describe('Basic user flow for Website', () => {
     // Query select all of the <product-item> elements, then for every single product element
     // get the shadowRoot and query select the button inside, and click on it.
     // Check to see if the innerText of #cart-count is 20
+
+    
   }, 10000);
 
   // Check to make sure that after you reload the page it remembers all of the items in your cart
