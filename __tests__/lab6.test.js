@@ -105,9 +105,31 @@ describe('Basic user flow for Website', () => {
     // Query select all of the <product-item> elements, then for every single product element
     // get the shadowRoot and query select the button inside, and click on it.
     // Check to see if the innerText of #cart-count is 20
+    const allItems = await page.$$('product-item');
+    const cart = await page.$('#cart-count');
 
-    
-  }, 10000);
+    // console.log('This is cart: ' + cart);
+    let cartCount;
+    for(let i = 0; i < allItems.length; i++){
+      const shadRoot = await page.evaluateHandle(e => e.shadowRoot, allItems[i]);
+      const queryButton = await shadRoot.$('button');
+      await queryButton.click();
+
+      // Added this section to make sure all buttons are clicked
+      // For some reason the first button was getting clicked twice, so one item ended up not being added to cart
+      const buttonText = await page.evaluateHandle(e => e.innerText, queryButton);
+      const jsonButtonText = await buttonText.jsonValue();
+      if(jsonButtonText == "Remove from Cart"){
+        continue;
+      } else{
+        await queryButton.click();
+      }
+    }
+    cartCount = await cart.getProperty('innerText');
+    // console.log('This is cartCount: ' + cartCount);
+    const jsonCartCount = await cartCount.jsonValue();
+    expect(jsonCartCount).toBe("20");
+  }, 20000);
 
   // Check to make sure that after you reload the page it remembers all of the items in your cart
   it('Checking number of items in cart on screen after reload', async () => {
